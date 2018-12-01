@@ -12,6 +12,6 @@
   "homepage": "https://bitbucket.org/matushruz/i18n#readme",
   "dependencies": {},
   "bin": {
-    "i18n": "run.js"
+    "i18n": "./cli.js"
   }
 }
