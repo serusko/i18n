@@ -6,13 +6,13 @@ import * as ReactDOMServer from "react-dom/server";
 import config from './config';
 import Logger from './Logger';
 import { Locale } from './config';
-import fileSource from './fileSource';
 import I18n, { I18nContext } from './I18n';
-import { TranslationMap } from './fileSource';
+import { TranslationMap, FileResponse } from './fileSource';
 
 // -------------------------------------------------------------------------------------------------
 
 export type I18nProviderProps = {
+  source: (locale: Locale) => Promise<FileResponse>,
   watchRegister?: ({}) => void,
   children: React.ReactNode,
   locale?: Locale
@@ -116,7 +116,8 @@ export default class I18nProvider extends React.PureComponent<
   // // --------------------------------------------------------------------------------------------
 
   loadSource = (locale: Locale): void => {
-    fileSource(locale)
+    this.props.source && 
+    this.props.source(locale)
       .then(({ get, match }) => {
         this.mounted && this.setState({ locale, get, match });
       })

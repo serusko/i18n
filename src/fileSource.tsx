@@ -41,7 +41,7 @@ const match = (locale: Locale) => {
 
 // type MatchFn = (search: string) => TranslationMap;
 
-interface FileResponse {
+export interface FileResponse {
   match: (search: string) => null | TranslationMap,
   get: (key: string) => null | string
 }
