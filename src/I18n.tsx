@@ -124,4 +124,11 @@ class I18n extends React.PureComponent<I18nProps> {
 
 export { I18nContext };
 
+
+const BBCode = function(props: {value: string }): React.ReactNode {
+  return bbParser.toReact(props.value);
+}
+
+export { bbParser, BBCode };
+
 export default I18n;

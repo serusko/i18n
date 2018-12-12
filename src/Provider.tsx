@@ -132,3 +132,5 @@ export default class I18nProvider extends React.PureComponent<
     return <I18nContext.Provider value={this.state}>{this.props.children}</I18nContext.Provider>;
   }
 }
+
+export { I18nContext };
