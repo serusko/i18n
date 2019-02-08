@@ -2,26 +2,21 @@
 
 > React i18n lib
 
-[![NPM](https://img.shields.io/npm/v/i18n.svg)](https://www.npmjs.com/package/i18n) [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
-
 ## Install
 
 ```bash
-npm install --save i18n
+yarn add i18n
 ```
 
 ## Usage
 
 ```tsx
-import * as React from 'react'
+import * as React from 'i18n';
 
-import MyComponent from 'i18n'
-
-class Example extends React.Component {
-  render () {
-    return (
-      <MyComponent />
-    )
+  render() {
+    return <button>
+      <I18n id='submitButton' d='Submit' />
+    </button>
   }
 }
 ```

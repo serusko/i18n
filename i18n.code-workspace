@@ -1,0 +1,41 @@
+{
+  "folders": [
+    {
+      "path": "."
+    }
+  ],
+  "settings": {
+    // Flow
+    "javascript.validate.enable": false,
+    "flow.useNPMPackagedFlow": true,
+    "flow.enabled": true,
+
+    // Eslint
+    "eslint.alwaysShowStatus": true,
+    "eslint.packageManager": "yarn",
+    "eslint.enable": true,
+
+    // Editor goodies
+    "files.defaultLanguage": "javascriptreact",
+    "editor.rulers": [100],
+    "files.associations": {
+      "*.js": "javascriptreact"
+    },
+
+    // search
+    "search.exclude": {
+      "**/.git": true,
+      "**/node_modules": true,
+      "**/build": true,
+      "**/.docz": true,
+      "**/docz": true
+    },
+
+    // Hide
+    "files.exclude": {
+      "node_modules": true,
+      "editorconfig": true
+    },
+    "editor.formatOnSave": true
+  }
+}

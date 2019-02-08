@@ -2,16 +2,17 @@ import * as React from 'react';
 
 import { Locale } from './config';
 import format from './_helpers/format';
-import bbParser from './_helpers/bbParser';
+import BBCode from './_helpers/BBCode';
 import { I18nContextValue } from './Provider';
 import { TranslationMap } from './fileSource';
 
 // -----------------------------------------------------------------------------
+
 export type I18nProps = {
-  children?: (val: string, map: null | TranslationMap) => React.ReactNode,
-  d?: string | TranslationMap,
-  id: string,
-  v?: string
+  children?: (val: string, map: null | TranslationMap) => React.ReactNode;
+  d?: string | TranslationMap;
+  id: string;
+  v?: string;
 };
 
 // -------------------------------------------------------------------------------------------------
@@ -42,7 +43,7 @@ class I18n extends React.PureComponent<I18nProps> {
 
   // // --------------------------------------------------------------------------------------------
 
-  getEnum = (): null | { template: string, def: TranslationMap } => {
+  getEnum = (): null | { template: string; def: TranslationMap } => {
     let { id, d, v } = this.props;
 
     if (!this.props.id.startsWith('$') && typeof d !== 'object') {
@@ -112,10 +113,10 @@ class I18n extends React.PureComponent<I18nProps> {
     }
 
     let value = template && format(template, locale, more);
-    value = bbParser.toReact(value);
+    value = BBCode.parser.toReact(value);
 
     if (isFunc && children) {
-      return children(value, typeof def === 'object' && def !== null ? def : null);       
+      return children(value, typeof def === 'object' && def !== null ? def : null);
     }
 
     return value;
@@ -123,12 +124,5 @@ class I18n extends React.PureComponent<I18nProps> {
 }
 
 export { I18nContext };
-
-
-const BBCode = function(props: {value: string }): React.ReactNode {
-  return bbParser.toReact(props.value);
-}
-
-export { bbParser, BBCode };
 
 export default I18n;
