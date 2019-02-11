@@ -1,53 +1,48 @@
 // @flow
 
 import * as React from 'react';
-import * as ReactDOMServer from "react-dom/server";
+import * as ReactDOMServer from 'react-dom/server';
 
 import config from './config';
 import Logger from './Logger';
-import { Locale } from './config';
 import I18n, { I18nContext } from './I18n';
 import { TranslationMap, FileResponse } from './fileSource';
 
 // -------------------------------------------------------------------------------------------------
 
 export type I18nProviderProps = {
-  source: (locale: Locale) => Promise<FileResponse>,
-  watchRegister?: ({}) => void,
-  children: React.ReactNode,
-  locale?: Locale
+  source: (locale: string) => Promise<FileResponse>;
+  watchRegister?: ({}) => void;
+  children: React.ReactNode;
+  locale?: string;
 };
 
 interface KeyRegister {
-  [key: string]: string
+  [key: string]: string;
 }
 
 // -------------------------------------------------------------------------------------------------
 
 const defaultMatch = (search: string) => {
   return search ? {} : null;
-}
+};
 
 const defaultGet = (key: string) => {
   return key ? null : '';
-}
-
-
-export interface I18nContextValue {
-  toString: (component: React.ReactElement<typeof I18n>) => string,
-  match: (search: string) => null | TranslationMap,
-  registerKey: (key: string, value: any) => void,
-  unregisterKey: (key: string) => void,
-  get: (key: string) => null | string,
-  locale: Locale
 };
 
-// -------------------------------------------------------------------------------------------------ya
+export interface I18nContextValue {
+  toString: (component: React.ReactElement<typeof I18n>) => string;
+  match: (search: string) => null | TranslationMap;
+  registerKey: (key: string, value: any) => void;
+  unregisterKey: (key: string) => void;
+  get: (key: string) => null | string;
+  locale: string;
+}
 
-export default class I18nProvider extends React.PureComponent<
-  I18nProviderProps,
-  I18nContextValue
-> {
+// -------------------------------------------------------------------------------------------------
+
+export default class I18nProvider extends React.PureComponent<I18nProviderProps, I18nContextValue> {
   register: KeyRegister = {};
   mounted: boolean = false;
 
@@ -115,15 +110,16 @@ export default class I18nProvider extends React.PureComponent<
 
   // // --------------------------------------------------------------------------------------------
 
-  loadSource = (locale: Locale): void => {
-    this.props.source && 
-    this.props.source(locale)
-      .then(({ get, match }) => {
-        this.mounted && this.setState({ locale, get, match });
-      })
-      .catch(() => {
-        Logger.notify(new Error('Error loading locale source'));
-      });
+  loadSource = (locale: string): void => {
+    this.props.source &&
+      this.props
+        .source(locale)
+        .then(({ get, match }) => {
+          this.mounted && this.setState({ locale, get, match });
+        })
+        .catch(() => {
+          Logger.notify(new Error('Error loading locale source'));
+        });
   };
 
   // // --------------------------------------------------------------------------------------------

@@ -2,16 +2,22 @@
  * @class ExampleComponent
  */
 
-import I18n from './I18n';
-import { TranslationMap } from './fileSource';
+import * as React from 'react'
 
-export { TranslationMap };
-export { Locale } from './config';
+import styles from './styles.css'
 
-export default I18n;
-export { I18nContext } from './I18n';
-export { default as Logger } from './Logger';
-export { default as config } from './config';
-export { default as I18nProvider } from './Provider';
-export { default as BBCode } from './_helpers/BBCode';
-export { default as babelPlugin } from './tools/babel-plugin';
+export type Props = { text: string }
+
+export default class ExampleComponent extends React.Component<Props> {
+  render() {
+    const {
+      text
+    } = this.props
+
+    return (
+      <div className={styles.test}>
+        Example Component: {text}
+      </div>
+    )
+  }
+}

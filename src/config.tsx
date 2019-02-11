@@ -1,4 +1,3 @@
-
 const SUPPORTED_LOCALES: Array<string> = (
   (process.env.REACT_APP_DEFAULT_LANGUAGE || 'en') +
   ',' +
@@ -14,12 +13,7 @@ SUPPORTED_LOCALES.forEach(locale => {
   LOCALES_MAP[locale] = locale;
 });
 
-export enum Locale {
-  sk = 'sk',
-  en = 'en'  
-};
-
-const DEFAULT_LOCALE: Locale = process.env.REACT_APP_DEFAULT_LANGUAGE
+const DEFAULT_LOCALE: string = process.env.REACT_APP_DEFAULT_LANGUAGE
   ? LOCALES_MAP[process.env.REACT_APP_DEFAULT_LANGUAGE] || LOCALES_MAP.en
   : LOCALES_MAP.en;
 

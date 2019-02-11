@@ -1,8 +1,6 @@
 import * as React from 'react';
 
-import { Locale } from './config';
 import format from './_helpers/format';
-import BBCode from './_helpers/BBCode';
 import { I18nContextValue } from './Provider';
 import { TranslationMap } from './fileSource';
 
@@ -18,7 +16,7 @@ export type I18nProps = {
 // -------------------------------------------------------------------------------------------------
 
 const defaultContext: I18nContextValue = {
-  locale: Locale.en,
+  locale: 'en',
   get: (key: string): null | string => {
     console.log('I18n: Get for: ', key);
     return null;
@@ -113,7 +111,22 @@ class I18n extends React.PureComponent<I18nProps> {
     }
 
     let value = template && format(template, locale, more);
-    value = BBCode.parser.toReact(value);
+    if (value.indexOf('[br /]')) {
+      let tmp = value;
+      let val = [];
+      let i = 0;
+      i = value.indexOf('[br /]');
+      while (i > -1) {
+        val.push(tmp.substr(0, i));
+        tmp = tmp.substr(i + 6);
+        if (tmp.length) {
+          val.push(<br />);
+          i = value.indexOf('[br /]', i);
+        } else {
+          i = -1;
+        }
+      }
+    }
 
     if (isFunc && children) {
       return children(value, typeof def === 'object' && def !== null ? def : null);

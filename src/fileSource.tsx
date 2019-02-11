@@ -1,11 +1,10 @@
 import Logger from './Logger';
-import { Locale } from './config';
 
 const MAP = {};
 
 // -------------------------------------------------------------------------------------------------
 
-const get = (locale: Locale) => {
+const get = (locale: string) => {
   function getTranslation(key: string): null | string {
     try {
       return MAP[locale] && MAP[locale].hasOwnProperty(key) ? MAP[locale][key] : null;
@@ -20,10 +19,10 @@ const get = (locale: Locale) => {
 
 // -----------------------------------------------------------------------------------------------
 export interface TranslationMap {
-  [key: string]: string
+  [key: string]: string;
 }
 
-const match = (locale: Locale) => {
+const match = (locale: string) => {
   function searchTranslation(search: string): null | TranslationMap {
     let keys = {};
     Object.keys(MAP[locale]).forEach(key => {
@@ -42,11 +41,11 @@ const match = (locale: Locale) => {
 // type MatchFn = (search: string) => TranslationMap;
 
 export interface FileResponse {
-  match: (search: string) => null | TranslationMap,
-  get: (key: string) => null | string
+  match: (search: string) => null | TranslationMap;
+  get: (key: string) => null | string;
 }
 
-export default function fileSourceFactory(locale: Locale): Promise<FileResponse> {
+export default function fileSourceFactory(locale: string): Promise<FileResponse> {
   return new Promise(resolve => {
     resolve({
       match: match(locale),
