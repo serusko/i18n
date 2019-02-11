@@ -1,4 +1,5 @@
 import MessageFormat from 'intl-messageformat';
+
 import Logger from '../Logger';
 
 // -------------------------------------------------------------------------------------------------

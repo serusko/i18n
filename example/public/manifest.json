@@ -1,8 +1,0 @@
-{
-  "short_name": "i18n",
-  "name": "i18n",
-  "start_url": "./index.html",
-  "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
-}

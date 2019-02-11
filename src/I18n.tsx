@@ -110,22 +110,30 @@ class I18n extends React.PureComponent<I18nProps> {
       template = get(key) || template || '';
     }
 
-    let value = template && format(template, locale, more);
+    let value: any = template && format(template, locale, more);
+
+    // keep backward compatibility for aida
     if (value.indexOf('[br /]')) {
       let tmp = value;
       let val = [];
       let i = 0;
       i = value.indexOf('[br /]');
+
       while (i > -1) {
         val.push(tmp.substr(0, i));
         tmp = tmp.substr(i + 6);
+
         if (tmp.length) {
-          val.push(<br />);
-          i = value.indexOf('[br /]', i);
+          val.push(<br key={i} />);
+          i = tmp.indexOf('[br /]', i);
         } else {
           i = -1;
         }
       }
+      if (tmp.length) {
+        val.push(tmp);
+      }
+      value = val;
     }
 
     if (isFunc && children) {
