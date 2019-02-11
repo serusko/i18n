@@ -18,7 +18,9 @@ export type I18nProps = {
 const defaultContext: I18nContextValue = {
   locale: 'en',
   get: (key: string): null | string => {
-    console.log('I18n: Get for: ', key);
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('I18n: translate for: ', key);
+    }
     return null;
   },
   match: (search: string): null | TranslationMap => {
@@ -34,9 +36,9 @@ const defaultContext: I18nContextValue = {
 
 // source context
 const I18nContext: React.Context<I18nContextValue> = React.createContext(defaultContext);
+const I18nConsumer = I18nContext.Consumer;
 
 class I18n extends React.PureComponent<I18nProps> {
-  static Context = I18nContext.Consumer;
   static contextType = I18nContext;
 
   // // --------------------------------------------------------------------------------------------
@@ -144,6 +146,6 @@ class I18n extends React.PureComponent<I18nProps> {
   }
 }
 
-export { I18nContext };
+export { I18nContext, I18nConsumer };
 
 export default I18n;

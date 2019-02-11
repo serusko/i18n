@@ -1,4 +1,5 @@
 const jsxPlugin = require('babel-plugin-syntax-jsx');
+const path = require('path');
 const fs = require('fs');
 
 // debug database
@@ -21,21 +22,21 @@ let changed = false;
  * }
  */
 
- export interface BabelPluginOptions {
+export interface BabelPluginOptions {
   defaultMessages: null | string | {};
   outputFile: null | string;
   debugFile: null | string;
   saveKeys: null | Boolean;
   tagName: null | string;
- }
+}
 
- const defaultOptions: BabelPluginOptions = {
+const defaultOptions: BabelPluginOptions = {
   defaultMessages: null,
   outputFile: null,
   saveKeys: false,
   debugFile: null,
-  tagName: null,
- }
+  tagName: null
+};
 
 export default function I18nBabelPlugin(options: BabelPluginOptions = defaultOptions) {
   // debug output file
@@ -61,6 +62,11 @@ export default function I18nBabelPlugin(options: BabelPluginOptions = defaultOpt
       replaceDefault = options.defaultMessages;
     }
   }
+
+  fs.writeFileSync(
+    path.resolve(__dirname, 'replaces.json'),
+    JSON.stringify(replaceDefault, null, 2)
+  );
 
   // // --------------------------------------------------------------------------------------------
 
@@ -92,7 +98,7 @@ export default function I18nBabelPlugin(options: BabelPluginOptions = defaultOpt
         // @ts-ignore
         JSXElement(path, state) {
           if (path.node.openingElement.name.name === JSX_TAG_NAME) {
-            let attrs = {};
+            let attrs: any = {};
             // @ts-ignore
             path.node.openingElement.attributes.forEach(i => {
               if (i.name) {
@@ -180,10 +186,10 @@ export default function I18nBabelPlugin(options: BabelPluginOptions = defaultOpt
               // @ts-ignore
               if (attrs.id.value.endsWith('$')) {
                 const props =
-                // @ts-ignore
-                  attrs.d && attrs.d.expression && attrs.d.expression.properties
                   // @ts-ignore
-                    ? attrs.d.expression.properties
+                  attrs.d && attrs.d.expression && attrs.d.expression.properties
+                    ? // @ts-ignore
+                      attrs.d.expression.properties
                     : null;
 
                 if (!props || typeof props !== 'object') {
@@ -243,4 +249,4 @@ export default function I18nBabelPlugin(options: BabelPluginOptions = defaultOpt
       }
     };
   };
-};
+}

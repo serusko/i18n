@@ -50,10 +50,11 @@ export default class I18nProvider extends React.PureComponent<I18nProviderProps,
 
   constructor(props: I18nProviderProps) {
     super(props);
+    const isProd = process.env.NODE_ENV === 'production';
     this.state = {
+      unregisterKey: isProd ? null : this.unregisterKey.bind(this),
+      registerKey: isProd ? null : this.registerKey.bind(this),
       locale: props.locale || config.DEFAULT_LOCALE,
-      unregisterKey: this.unregisterKey.bind(this),
-      registerKey: this.registerKey.bind(this),
       toString: this.renderToString.bind(this),
       match: defaultMatch,
       get: defaultGet

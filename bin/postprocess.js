@@ -1,14 +1,14 @@
-"use-strict";
+'use-strict';
 
-const fs = require("mz/fs");
-const path = require("path");
+const fs = require('mz/fs');
+const path = require('path');
 
-const SOURCE_DIR = path.resolve(__dirname, "../../src/assets/I18n");
-const KEYMAP = path.resolve(__dirname, "./src/keys.json");
-const PREVMAP = path.resolve(__dirname, "./src/old.json");
-const DEFAULT_LOCALE = process.env.REACT_APP_DEFAULT_LANGUAGE || "en";
+const SOURCE_DIR = path.resolve(__dirname, '../../src/assets/I18n');
+const KEYMAP = path.resolve(__dirname, './src/keys.json');
+const PREVMAP = path.resolve(__dirname, './src/old.json');
+const DEFAULT_LOCALE = process.env.REACT_APP_DEFAULT_LANGUAGE || 'en';
 
-console.log("Localization postprocess started"); // eslint-disable-line
+console.log('Localization postprocess started'); // eslint-disable-line
 
 let KEYS = {};
 let MOVED = {}; // MAP of moved keys = ID is changed but default value is same
@@ -48,7 +48,7 @@ Promise.all([fs.readFile(KEYMAP), fs.readFile(PREVMAP), fs.readdir(SOURCE_DIR)])
     return results[2];
   })
   .catch(e => {
-    console.error("Reading sources failed!"); // eslint-disable-line
+    console.error('Reading sources failed!'); // eslint-disable-line
     throw e;
   })
 
@@ -61,12 +61,10 @@ Promise.all([fs.readFile(KEYMAP), fs.readFile(PREVMAP), fs.readdir(SOURCE_DIR)])
     // }
     // ---------------------------------------------------------------------------------------------
     const locales = files
-      .filter(
-        filename => filename.length === 7 && /[a-z]{2}\.json/.test(filename)
-      )
+      .filter(filename => filename.length === 7 && /[a-z]{2}\.json/.test(filename))
       .map(filename => filename.substr(0, 2))
       .map(locale => {
-        const filePath = path.resolve(SOURCE_DIR, locale + ".json");
+        const filePath = path.resolve(SOURCE_DIR, locale + '.json');
         return fs.readFile(filePath).then(res => ({
           locale,
           filePath,
@@ -76,7 +74,7 @@ Promise.all([fs.readFile(KEYMAP), fs.readFile(PREVMAP), fs.readdir(SOURCE_DIR)])
     return Promise.all(locales);
   })
   .catch(e => {
-    console.log("Reading assets failed"); // eslint-disable-line
+    console.log('Reading assets failed'); // eslint-disable-line
     throw e;
   })
 
@@ -89,16 +87,10 @@ Promise.all([fs.readFile(KEYMAP), fs.readFile(PREVMAP), fs.readdir(SOURCE_DIR)])
         return {
           ...obj,
           content: Object.keys(KEYS).reduce((messages, key) => {
-            if (
-              obj.content[key] &&
-              typeof obj.content[key] === typeof KEYS[key]
-            ) {
+            if (obj.content[key] && typeof obj.content[key] === typeof KEYS[key]) {
               // IF sourceFile contain key and it has same type as default, use
               messages[key] = obj.content[key];
-            } else if (
-              MOVED.hasOwnProperty(key) &&
-              obj.content.hasOwnProperty(MOVED[key])
-            ) {
+            } else if (MOVED.hasOwnProperty(key) && obj.content.hasOwnProperty(MOVED[key])) {
               // original KEY was removed but default value is same as another => moved = use
               messages[key] = obj.content[MOVED[key]];
             } else if (obj.locale === DEFAULT_LOCALE) {
@@ -112,7 +104,7 @@ Promise.all([fs.readFile(KEYMAP), fs.readFile(PREVMAP), fs.readdir(SOURCE_DIR)])
     );
   })
   .catch(e => {
-    console.log("Locale fill failed"); // eslint-disable-line
+    console.log('Locale fill failed'); // eslint-disable-line
     throw e;
   })
 
@@ -151,8 +143,8 @@ Promise.all([fs.readFile(KEYMAP), fs.readFile(PREVMAP), fs.readdir(SOURCE_DIR)])
     fs.rename(KEYMAP, PREVMAP);
   })
   .then(() => {
-    console.log("I18n postprocess Done!"); // eslint-disable-line
+    console.log('I18n postprocess Done!'); // eslint-disable-line
   })
   .catch(e => {
-    console.log("I18n postprocess Failed", e); // eslint-disable-line
+    console.log('I18n postprocess Failed', e); // eslint-disable-line
   });
