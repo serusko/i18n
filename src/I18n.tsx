@@ -9,6 +9,7 @@ import { TranslationMap } from './fileSource';
 export type I18nProps = {
   children?: (val: string, map: null | TranslationMap) => React.ReactNode;
   d?: string | TranslationMap;
+  component?: React.Component;
   id: string;
   v?: string;
 };
@@ -87,7 +88,7 @@ class I18n extends React.PureComponent<I18nProps> {
   // // --------------------------------------------------------------------------------------------
 
   render(): React.ReactNode {
-    const { id, children, d, v, ...options } = this.props; // eslint-disable-line
+    const { id, children, d, v, component, ...options } = this.props; // eslint-disable-line
     const more = options || {};
     const isFunc = typeof children === 'function';
 
@@ -140,6 +141,12 @@ class I18n extends React.PureComponent<I18nProps> {
 
     if (isFunc && children) {
       return children(value, typeof def === 'object' && def !== null ? def : null);
+    }
+
+    if (component) {
+      const C = component;
+      // @ts-ignore
+      return <C>{value}</C>;
     }
 
     return value;
