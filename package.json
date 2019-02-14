@@ -1,6 +1,6 @@
 {
   "name": "@serus/i18n",
-  "version": "0.1.0",
+  "version": "0.1.3",
   "description": "Internationalization helper",
   "author": "serus22",
   "license": "MIT",
@@ -8,6 +8,7 @@
     "type": "git",
     "url": "git+https://github.com/serus22/i18n.git"
   },
+  "private": false,
   "main": "dist/index.js",
   "module": "dist/index.es.js",
   "jsnext:main": "dist/index.es.js",
@@ -20,7 +21,7 @@
     "test:watch": "react-scripts-ts test --env=jsdom",
     "build": "rollup -c",
     "start": "rollup -c -w",
-    "prepare": "yarn run build",
+    "prepare": "npm run build",
     "publish": "npm publish --access public"
   },
   "dependencies": {
