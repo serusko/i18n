@@ -36,11 +36,11 @@ const defaultContext: I18nContextValue = {
 // -------------------------------------------------------------------------------------------------
 
 // source context
-const I18nContext: React.Context<I18nContextValue> = React.createContext(defaultContext);
-const I18nConsumer = I18nContext.Consumer;
+const Context: React.Context<I18nContextValue> = React.createContext(defaultContext);
+const Consumer = Context.Consumer;
 
 class I18n extends React.PureComponent<I18nProps> {
-  static contextType = I18nContext;
+  static contextType = Context;
 
   // // --------------------------------------------------------------------------------------------
 
@@ -72,16 +72,18 @@ class I18n extends React.PureComponent<I18nProps> {
   // // --------------------------------------------------------------------------------------------
 
   componentDidMount(): void {
-    if (process.env.REACT_APP_STAGE !== 'production') {
-      this.context.registerKey(this.props.id, this.props.d);
+    const register = this.context.registerKey;
+    if (register && process.env.REACT_APP_STAGE !== 'production') {
+      register(this.props.id, this.props.d);
     }
   }
 
   // // --------------------------------------------------------------------------------------------
 
   componentWillUnmount(): void {
-    if (process.env.REACT_APP_STAGE !== 'production') {
-      this.context.unregisterKey(this.props.id);
+    const unregister = this.context.unregisterKey;
+    if (unregister && process.env.REACT_APP_STAGE !== 'production') {
+      unregister(this.props.id);
     }
   }
 
@@ -129,6 +131,6 @@ class I18n extends React.PureComponent<I18nProps> {
   }
 }
 
-export { I18nContext, I18nConsumer };
+export { Context, Consumer };
 
 export default I18n;

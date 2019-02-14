@@ -1,5 +1,6 @@
-export { default } from './I18n';
-export { I18nContext, I18nConsumer } from './I18n';
-export { default as I18nProvider } from './Provider';
+import Provider from './Provider';
+import I18n, { Context, Consumer } from './I18n';
 
+export default I18n;
+export { Context, Provider, Consumer };
 export { default as i18nBabelPlugin } from './tools/babel-plugin';

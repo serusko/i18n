@@ -5,12 +5,12 @@ import * as ReactDOMServer from 'react-dom/server';
 
 import config from './config';
 import Logger from './Logger';
-import I18n, { I18nContext } from './I18n';
+import I18n, { Context } from './I18n';
 import { TranslationMap, FileResponse } from './fileSource';
 
 // -------------------------------------------------------------------------------------------------
 
-export type I18nProviderProps = {
+export type ProviderProps = {
   source: (locale: string) => Promise<FileResponse>;
   watchRegister?: ({}) => void;
   children: React.ReactNode;
@@ -40,15 +40,17 @@ export interface I18nContextValue {
   locale: string;
 }
 
+const ReactProvider = Context.Provider;
+
 // -------------------------------------------------------------------------------------------------
 
-export default class I18nProvider extends React.PureComponent<I18nProviderProps, I18nContextValue> {
+export default class Provider extends React.PureComponent<ProviderProps, I18nContextValue> {
   register: KeyRegister = {};
   mounted: boolean = false;
 
   // // --------------------------------------------------------------------------------------------
 
-  constructor(props: I18nProviderProps) {
+  constructor(props: ProviderProps) {
     super(props);
     const isProd = process.env.NODE_ENV === 'production';
     this.state = {
@@ -80,7 +82,7 @@ export default class I18nProvider extends React.PureComponent<I18nProviderProps,
   renderToString = (component: React.ReactElement<typeof I18n>): string => {
     try {
       return ReactDOMServer.renderToString(
-        <I18nContext.Provider value={this.state}>{component}</I18nContext.Provider>
+        <ReactProvider value={this.state}>{component}</ReactProvider>
       );
     } catch (e) {
       Logger.notify(e);
@@ -126,8 +128,6 @@ export default class I18nProvider extends React.PureComponent<I18nProviderProps,
   // // --------------------------------------------------------------------------------------------
 
   render(): React.ReactNode {
-    return <I18nContext.Provider value={this.state}>{this.props.children}</I18nContext.Provider>;
+    return <ReactProvider value={this.state}>{this.props.children}</ReactProvider>;
   }
 }
-
-export { I18nContext };
