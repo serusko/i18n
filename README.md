@@ -2,7 +2,11 @@
 
 > Internationalization helper
 
-[![NPM](https://img.shields.io/npm/v/i18n.svg)](https://www.npmjs.com/package/matushruz/i18n) [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
+![](https://img.shields.io/npm/v/@serus/i18n.svg?style=flat)
+
+[![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
+
+[![Build Status](https://travis-ci.com/serus22/i18n.svg?branch=master)](https://travis-ci.com/serus22/i18n)
 
 ## Install
 

@@ -1,10 +1,13 @@
 {
-  "name": "i18n",
+  "name": "@serus/i18n",
   "version": "0.1.0",
   "description": "Internationalization helper",
   "author": "serus22",
   "license": "MIT",
-  "repository": "serus22/i18n",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/serus22/i18n.git"
+  },
   "main": "dist/index.js",
   "module": "dist/index.es.js",
   "jsnext:main": "dist/index.es.js",
@@ -53,5 +56,16 @@
   },
   "files": [
     "dist"
+  ],
+  "bugs": {
+    "url": "https://github.com/serus22/i18n/issues"
+  },
+  "homepage": "https://github.com/serus22/i18n#readme",
+  "bin": {
+    "i18n": "postprocess.js"
+  },
+  "keywords": [
+    "i18n",
+    "intl"
   ]
 }
