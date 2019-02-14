@@ -6,7 +6,7 @@ import * as ReactDOMServer from 'react-dom/server';
 import I18n from './I18n';
 import Context from './Context';
 import { I18nContextValue } from './Context';
-import { SourceResponseType } from './sourceFactory';
+import { SourceResponseType } from './tools/sourceFactory';
 
 // -------------------------------------------------------------------------------------------------
 

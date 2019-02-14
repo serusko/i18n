@@ -1,26 +1,35 @@
-import { TranslationSource } from './Context';
+import { TranslationSource } from '../Context';
 
 // -------------------------------------------------------------------------------------------------
 
-const get = (MAP: TranslationSource, locale: string) => (key: string): null | string => {
+const get = (source: TranslationSource, locale: string) => (key: string): null | string => {
+  let v: null | string = '';
   try {
-    return MAP[locale] && MAP[locale].hasOwnProperty(key) ? MAP[locale][key] : null;
+    v = source && source.hasOwnProperty(key) ? source[key] : null;
   } catch (e) {
     console.error(new Error(`I18n: Translation GET failed for ${locale}:${key}`));
     return null;
   }
+  console.log('call translate', key, v, source);
+  return v;
 };
 
-const match = (MAP: TranslationSource, locale: string) => (
+const match = (source: TranslationSource, locale: string) => (
   search: string
 ): null | TranslationSource => {
   let keys = {};
-  Object.keys(MAP[locale]).forEach(key => {
+  let i = 0;
+  Object.keys(source).forEach(key => {
     if (key.startsWith(search)) {
-      keys[key] = MAP[locale][key];
+      keys[key] = source[key];
+      i++;
     }
   });
-  return keys;
+  if (i > 0) {
+    return keys;
+  }
+  console.error(new Error(`I18n: Translation MATCH did not found any keys ${locale}:${search}`));
+  return null;
 };
 
 // -------------------------------------------------------------------------------------------------
@@ -49,6 +58,7 @@ export default function sourceFactory(
       } else if (resolvers && resolvers[locale]) {
         resolvers[locale]().then(data => {
           sources[locale] = data;
+          console.log(sources);
           resolve({
             match: match(sources[locale], locale),
             get: get(sources[locale], locale)
