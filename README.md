@@ -30,11 +30,15 @@ class Example extends React.Component {
 ```tsx
 import * as React from 'react';
 
-import I18n, { Provider } from 'i18n';
+import I18n, { Provider as I18nProvider } from 'i18n';
 
 class Example extends React.Component {
   render() {
-    return <I18n id="id1" d="Hello World!" />;
+    return (
+      <I18nProvider locale="en">
+        <I18n id="id1" d="Hello World!" />
+      </I18nProvider>
+    );
   }
 }
 ```

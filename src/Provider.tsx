@@ -3,15 +3,15 @@
 import * as React from 'react';
 import * as ReactDOMServer from 'react-dom/server';
 
-import config from './config';
-import Logger from './Logger';
-import I18n, { Context } from './I18n';
-import { TranslationMap, FileResponse } from './fileSource';
+import I18n from './I18n';
+import Context from './Context';
+import { I18nContextValue } from './Context';
+import { SourceResponseType } from './sourceFactory';
 
 // -------------------------------------------------------------------------------------------------
 
 export type ProviderProps = {
-  source: (locale: string) => Promise<FileResponse>;
+  source: (locale: string) => Promise<SourceResponseType>;
   watchRegister?: ({}) => void;
   children: React.ReactNode;
   locale?: string;
@@ -22,23 +22,6 @@ interface KeyRegister {
 }
 
 // -------------------------------------------------------------------------------------------------
-
-const defaultMatch = (search: string) => {
-  return search ? {} : null;
-};
-
-const defaultGet = (key: string) => {
-  return key ? null : '';
-};
-
-export interface I18nContextValue {
-  toString: (component: React.ReactElement<typeof I18n>) => string;
-  match: (search: string) => null | TranslationMap;
-  registerKey: (key: string, value: any) => void;
-  unregisterKey: (key: string) => void;
-  get: (key: string) => null | string;
-  locale: string;
-}
 
 const ReactProvider = Context.Provider;
 
@@ -56,10 +39,10 @@ export default class Provider extends React.PureComponent<ProviderProps, I18nCon
     this.state = {
       unregisterKey: isProd ? null : this.unregisterKey.bind(this),
       registerKey: isProd ? null : this.registerKey.bind(this),
-      locale: props.locale || config.DEFAULT_LOCALE,
       toString: this.renderToString.bind(this),
-      match: defaultMatch,
-      get: defaultGet
+      locale: props.locale || 'en',
+      match: () => ({}),
+      get: () => ''
     };
   }
 
@@ -85,7 +68,8 @@ export default class Provider extends React.PureComponent<ProviderProps, I18nCon
         <ReactProvider value={this.state}>{component}</ReactProvider>
       );
     } catch (e) {
-      Logger.notify(e);
+      console.error(new Error('I18n: renderToString failed'));
+      console.error(e);
       return '';
     }
   };
@@ -120,8 +104,9 @@ export default class Provider extends React.PureComponent<ProviderProps, I18nCon
         .then(({ get, match }) => {
           this.mounted && this.setState({ locale, get, match });
         })
-        .catch(() => {
-          Logger.notify(new Error('Error loading locale source'));
+        .catch(e => {
+          console.error(new Error('I18n: Error loading locale source'));
+          console.error(e);
         });
   };
 

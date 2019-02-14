@@ -1,69 +1,93 @@
 import * as React from 'react';
 
 import format from './_helpers/format';
-import { I18nContextValue } from './Provider';
-import { TranslationMap } from './fileSource';
+import Context, { TranslationSource } from './Context';
 
 // -----------------------------------------------------------------------------
 
-export type I18nProps = {
-  children?: (val: string, map: null | TranslationMap) => React.ReactNode;
-  d?: string | TranslationMap;
-  component?: React.Component;
+export interface I18nProps {
+  children?: (val: string, map: null | TranslationSource) => React.ReactNode;
+  component?: typeof React.Component;
+  d: string | TranslationSource;
   id: string;
   v?: string;
-};
+}
 
 // -------------------------------------------------------------------------------------------------
-
-const defaultContext: I18nContextValue = {
-  locale: 'en',
-  get: (key: string): null | string => {
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('I18n: translate for: ', key);
-    }
-    return null;
-  },
-  match: (search: string): null | TranslationMap => {
-    console.log('I18n: Search for: ', search);
-    return null;
-  },
-  unregisterKey: () => {},
-  registerKey: () => {},
-  toString: () => ''
-};
-
-// -------------------------------------------------------------------------------------------------
-
-// source context
-const Context: React.Context<I18nContextValue> = React.createContext(defaultContext);
-const Consumer = Context.Consumer;
 
 class I18n extends React.PureComponent<I18nProps> {
   static contextType = Context;
 
   // // --------------------------------------------------------------------------------------------
 
-  getEnum = (): null | { template: string; def: TranslationMap } => {
+  render(): React.ReactNode {
+    const { id, children, d, v, component, ...options } = this.props;
+    const more = options || {};
+    const isRenderProps = typeof children === 'function';
+
+    const { get, locale } = this.context;
+
+    const C: undefined | typeof React.Component = component;
+    let initial = d;
+    let template: string = typeof initial === 'string' ? initial : '';
+
+    if (!id) {
+      throw new Error(`I18n: Missing id`);
+    }
+
+    if (!initial) {
+      throw new Error(`I18n: Missing default for key "${id}"`);
+    }
+
+    // Enum
+    if (id.endsWith('$')) {
+      const enumObj = this.getEnum();
+      if (enumObj) {
+        template = enumObj.template;
+        initial = enumObj.initial;
+      }
+    } else {
+      // Common
+      template = get(id) || template || '';
+    }
+
+    let value: any = (template && format(template, locale, more)) || '';
+
+    // Render props
+    if (isRenderProps && children) {
+      return children(value, typeof initial === 'object' ? initial : null);
+    }
+
+    // Custom component
+    if (C) {
+      return <C {...this.props}>{value}</C>;
+    }
+
+    return value;
+  }
+
+  // // --------------------------------------------------------------------------------------------
+
+  getEnum = (): null | { template: string; initial: TranslationSource } => {
     let { id, d, v } = this.props;
 
     if (!this.props.id.startsWith('$') && typeof d !== 'object') {
-      throw new Error('I18n: Missing default for enum key ' + id);
+      throw new Error(`I18n: Missing default for Enum key "${id}"`);
     }
 
     const children = this.props.children;
 
     if (typeof children !== 'function' && (typeof v === 'undefined' || v === null || v === '')) {
-      throw new Error('I18n: Missing value for enum key ' + id);
+      throw new Error(`I18n: Missing value for Enum key "${id}"`);
     }
 
-    const def: null | TranslationMap =
+    const initial: null | TranslationSource =
       this.context.match(id) || (typeof d === 'object' ? d : null) || null;
 
-    if (def && typeof v !== 'undefined' && def[v]) {
+    if (initial && v !== null && typeof v !== 'undefined' && initial[v]) {
       return {
-        template: def[v],
-        def
+        template: initial[v],
+        initial
       };
     }
     return null;
@@ -73,64 +97,15 @@ class I18n extends React.PureComponent<I18nProps> {
 
   componentDidMount(): void {
     const register = this.context.registerKey;
-    if (register && process.env.REACT_APP_STAGE !== 'production') {
-      register(this.props.id, this.props.d);
-    }
+    register && register(this.props.id, this.props.d);
   }
 
   // // --------------------------------------------------------------------------------------------
 
   componentWillUnmount(): void {
     const unregister = this.context.unregisterKey;
-    if (unregister && process.env.REACT_APP_STAGE !== 'production') {
-      unregister(this.props.id);
-    }
-  }
-
-  // // --------------------------------------------------------------------------------------------
-
-  render(): React.ReactNode {
-    const { id, children, d, v, component, ...options } = this.props; // eslint-disable-line
-    const more = options || {};
-    const isFunc = typeof children === 'function';
-
-    const { get, locale } = this.context;
-    let def = d;
-    let template: string = typeof def === 'string' ? def : '';
-
-    // Enum key
-    if (id.endsWith('$')) {
-      let en = this.getEnum();
-      if (en) {
-        template = en.template;
-        def = en.def;
-      }
-    } else {
-      // Common keys
-      let key = id;
-      // Reusable Key
-      if (key[0] === '$') {
-        key = key.substr(1);
-      }
-      template = get(key) || template || '';
-    }
-
-    let value: any = template && format(template, locale, more);
-
-    if (isFunc && children) {
-      return children(value, typeof def === 'object' && def !== null ? def : null);
-    }
-
-    if (component) {
-      const C = component;
-      // @ts-ignore
-      return <C>{value}</C>;
-    }
-
-    return value;
+    unregister && unregister(this.props.id);
   }
 }
-
-export { Context, Consumer };
 
 export default I18n;

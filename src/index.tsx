@@ -1,5 +1,6 @@
+import I18n from './I18n';
 import Provider from './Provider';
-import I18n, { Context, Consumer } from './I18n';
+import Context, { Consumer } from './Context';
 
 export default I18n;
 export { Context, Provider, Consumer };

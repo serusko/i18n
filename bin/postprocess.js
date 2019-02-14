@@ -48,7 +48,7 @@ Promise.all([fs.readFile(KEYMAP), fs.readFile(PREVMAP), fs.readdir(SOURCE_DIR)])
     return results[2];
   })
   .catch(e => {
-    console.error('Reading sources failed!'); // eslint-disable-line
+    console.error('I18n: Reading sources failed!'); // eslint-disable-line
     throw e;
   })
 

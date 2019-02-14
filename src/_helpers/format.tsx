@@ -1,7 +1,5 @@
 import MessageFormat from 'intl-messageformat';
 
-import Logger from '../Logger';
-
 // -------------------------------------------------------------------------------------------------
 
 export default function format(template: string, locale: string, props: Object): string {
@@ -9,7 +7,7 @@ export default function format(template: string, locale: string, props: Object):
     let msg = new MessageFormat(template, locale);
     return msg.format(props);
   } catch (e) {
-    Logger.notify(new Error(`Pluralization failed for "${template}"`));
+    console.error(new Error(`I18n: Pluralization failed for "${template}"`));
     return template;
   }
 }
