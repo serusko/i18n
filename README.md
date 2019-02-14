@@ -9,8 +9,8 @@
 ## Install
 
 ```bash
-npm install --save i18n
-yarn add i18n
+npm install --save @save/i18n
+yarn add @serus/i18n
 ```
 
 ## Common use
