@@ -24,10 +24,10 @@
 
     // search
     "search.exclude": {
-      "**/.git": true,
       "**/node_modules": true,
       "**/build": true,
       "**/.docz": true,
+      "**/.git": true,
       "**/docz": true
     },
 

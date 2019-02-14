@@ -4,4 +4,4 @@ import Context, { Consumer } from './Context';
 
 export default I18n;
 export { Context, Provider, Consumer };
-export { default as i18nBabelPlugin } from './tools/babel-plugin';
+export { default as babelPlugin } from './tools/babel-plugin';
