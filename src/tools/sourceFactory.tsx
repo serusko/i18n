@@ -2,19 +2,21 @@ import { TranslationSource } from '../Context';
 
 // -------------------------------------------------------------------------------------------------
 
-const get = (source: TranslationSource, locale: string) => (key: string): null | string => {
+const get = (source: TranslationSource, locale: string, debug?: boolean) => (
+  key: string
+): null | string => {
   let v: null | string = '';
   try {
     v = source && source.hasOwnProperty(key) ? source[key] : null;
   } catch (e) {
-    console.error(new Error(`I18n: Translation GET failed for ${locale}:${key}`));
+    debug && console.error(new Error(`I18n: Translation GET failed for ${locale}:${key}`));
     return null;
   }
-  console.log('call translate', key, v, source);
+  debug && console.log(`call translate for: ${key} = "${v}"`);
   return v;
 };
 
-const match = (source: TranslationSource, locale: string) => (
+const match = (source: TranslationSource, locale: string, debug?: boolean) => (
   search: string
 ): null | TranslationSource => {
   let keys = {};
@@ -28,7 +30,8 @@ const match = (source: TranslationSource, locale: string) => (
   if (i > 0) {
     return keys;
   }
-  console.error(new Error(`I18n: Translation MATCH did not found any keys ${locale}:${search}`));
+  debug &&
+    console.error(new Error(`I18n: Translation MATCH did not found any keys ${locale}:${search}`));
   return null;
 };
 
@@ -44,7 +47,8 @@ export interface ResolversType {
 }
 
 export default function sourceFactory(
-  resolvers: ResolversType
+  resolvers: ResolversType,
+  debug?: boolean
 ): (locale: string) => Promise<SourceResponseType> {
   const sources: { [locale: string]: TranslationSource } = {};
 
@@ -52,8 +56,8 @@ export default function sourceFactory(
     return new Promise((resolve, reject) => {
       if (sources && sources[locale]) {
         resolve({
-          match: match(sources[locale], locale),
-          get: get(sources[locale], locale)
+          match: match(sources[locale], locale, debug),
+          get: get(sources[locale], locale, debug)
         });
       } else if (resolvers && resolvers[locale]) {
         resolvers[locale]().then(data => {
@@ -65,7 +69,13 @@ export default function sourceFactory(
           });
         });
       } else {
-        reject(new Error(`Cannot get resolver for ${locale}`));
+        if (debug) {
+          reject(new Error(`Cannot get resolver for ${locale}`));
+        }
+        resolve({
+          match: match(sources[locale], locale),
+          get: get(sources[locale], locale)
+        });
       }
     });
   };

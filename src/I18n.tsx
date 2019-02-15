@@ -24,6 +24,7 @@ class I18n extends React.PureComponent<I18nProps> {
     const { id, children, d, v, component, ...options } = this.props;
     const more = options || {};
     const isRenderProps = typeof children === 'function';
+    const isEnum = id.endsWith('$');
 
     const { get, locale } = this.context;
 
@@ -40,7 +41,7 @@ class I18n extends React.PureComponent<I18nProps> {
     }
 
     // Enum
-    if (id.endsWith('$')) {
+    if (isEnum) {
       const enumObj = this.getEnum();
       if (enumObj) {
         template = enumObj.template;
@@ -55,7 +56,7 @@ class I18n extends React.PureComponent<I18nProps> {
 
     // Render props
     if (isRenderProps && children) {
-      return children(value, typeof initial === 'object' ? initial : null);
+      return children(value, isEnum && typeof initial === 'object' ? initial : null);
     }
 
     // Custom component
