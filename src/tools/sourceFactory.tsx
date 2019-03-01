@@ -62,10 +62,10 @@ export default function sourceFactory(
       } else if (resolvers && resolvers[locale]) {
         resolvers[locale]().then(data => {
           sources[locale] = data;
-          console.log(sources);
+          debug && console.log(sources);
           resolve({
-            match: match(sources[locale], locale),
-            get: get(sources[locale], locale)
+            match: match(sources[locale], locale, debug),
+            get: get(sources[locale], locale, debug)
           });
         });
       } else {
