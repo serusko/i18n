@@ -29,7 +29,4 @@ const defaultContext: I18nContextValue = {
 // -------------------------------------------------------------------------------------------------
 
 const Context: React.Context<I18nContextValue> = React.createContext(defaultContext);
-const Consumer = Context.Consumer;
-
-export { Consumer };
 export default Context;

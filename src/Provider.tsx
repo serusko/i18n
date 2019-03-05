@@ -23,10 +23,6 @@ interface KeyRegister {
 
 // -------------------------------------------------------------------------------------------------
 
-const ReactProvider = Context.Provider;
-
-// -------------------------------------------------------------------------------------------------
-
 export default class Provider extends React.PureComponent<ProviderProps, I18nContextValue> {
   register: KeyRegister = {};
   mounted: boolean = false;
@@ -65,7 +61,7 @@ export default class Provider extends React.PureComponent<ProviderProps, I18nCon
   renderToString = (component: React.ReactElement<typeof I18n>): string => {
     try {
       return ReactDOMServer.renderToString(
-        <ReactProvider value={this.state}>{component}</ReactProvider>
+        <Context.Provider value={this.state}>{component}</Context.Provider>
       );
     } catch (e) {
       console.error(new Error('I18n: renderToString failed'));
@@ -113,6 +109,6 @@ export default class Provider extends React.PureComponent<ProviderProps, I18nCon
   // // --------------------------------------------------------------------------------------------
 
   render(): React.ReactNode {
-    return <ReactProvider value={this.state}>{this.props.children}</ReactProvider>;
+    return <Context.Provider value={this.state}>{this.props.children}</Context.Provider>;
   }
 }
