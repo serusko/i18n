@@ -1,9 +1,7 @@
 // @flow
 
 import * as React from 'react';
-import * as ReactDOMServer from 'react-dom/server';
 
-import I18n from './I18n';
 import Context from './Context';
 import { I18nContextValue } from './Context';
 import { SourceResponseType } from './tools/sourceFactory';
@@ -35,7 +33,6 @@ export default class Provider extends React.PureComponent<ProviderProps, I18nCon
     this.state = {
       unregisterKey: isProd ? null : this.unregisterKey.bind(this),
       registerKey: isProd ? null : this.registerKey.bind(this),
-      toString: this.renderToString.bind(this),
       locale: props.locale || 'en',
       match: () => ({}),
       get: () => ''
@@ -54,20 +51,6 @@ export default class Provider extends React.PureComponent<ProviderProps, I18nCon
   unregisterKey = (key: string): void => {
     delete this.register[key];
     this.props.watchRegister && this.props.watchRegister({ ...this.register });
-  };
-
-  // // --------------------------------------------------------------------------------------------
-
-  renderToString = (component: React.ReactElement<typeof I18n>): string => {
-    try {
-      return ReactDOMServer.renderToString(
-        <Context.Provider value={this.state}>{component}</Context.Provider>
-      );
-    } catch (e) {
-      console.error(new Error('I18n: renderToString failed'));
-      console.error(e);
-      return '';
-    }
   };
 
   // // --------------------------------------------------------------------------------------------
