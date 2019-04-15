@@ -103,8 +103,6 @@ export default function I18nBabelPlugin(options: BabelPluginOptions = defaultOpt
               }
             }
 
-            // detect reused keys = not declared at moment
-
             if (!attrs.d) {
               throw path.buildCodeFrameError('[React I18n] Message must have a default value.');
             }
@@ -146,8 +144,7 @@ export default function I18nBabelPlugin(options: BabelPluginOptions = defaultOpt
             if (attrs.id.value.endsWith('$')) {
               const props =
                 attrs.d && attrs.d.expression && attrs.d.expression.properties
-                  ? // @ts-ignore
-                    attrs.d.expression.properties
+                  ? attrs.d.expression.properties
                   : null;
 
               if (!props || typeof props !== 'object') {
