@@ -1,5 +1,4 @@
 const jsxPlugin = require('babel-plugin-syntax-jsx');
-const path = require('path');
 const fs = require('fs');
 
 // debug database
@@ -38,11 +37,18 @@ const defaultOptions: BabelPluginOptions = {
   tagName: null
 };
 
+interface TagAttribute {
+  name: {
+    name: string;
+  };
+  value: any;
+}
+
 export default function I18nBabelPlugin(options: BabelPluginOptions = defaultOptions) {
   // debug output file
-  const KEYMAP_FILE = options.debugFile;
+  const DEBUG_FILE = options.debugFile;
   // active keys map
-  const KEYS_FILE = options.outputFile;
+  const DEFAULTS_FILE = options.outputFile;
   // tag name
   const JSX_TAG_NAME = options.tagName || 'I18n';
 
@@ -63,189 +69,158 @@ export default function I18nBabelPlugin(options: BabelPluginOptions = defaultOpt
     }
   }
 
-  fs.writeFileSync(
-    path.resolve(__dirname, 'replaces.json'),
-    JSON.stringify(replaceDefault, null, 2)
-  );
-
   // // --------------------------------------------------------------------------------------------
 
   return function() {
     return {
       inherits: jsxPlugin,
+      visitor: {
+        JSXElement(path: any, state: any) {
+          const tagName = path.node.openingElement.name.name;
 
-      // work done - save outputs
+          if (tagName === JSX_TAG_NAME) {
+            let attrs: any = {};
+            path.node.openingElement.attributes.forEach((i: TagAttribute) => {
+              if (i.name) {
+                attrs[i.name.name] = i.value;
+              }
+            });
+
+            const id = attrs.id && attrs.id.value;
+
+            if (typeof id !== 'string') {
+              throw path.buildCodeFrameError('[React I18n] Key ID must be string');
+            }
+
+            const dolars = id.match(/\$/g) || [];
+            if (dolars.length > 1) {
+              if (dolars.length > 2) {
+                throw path.buildCodeFrameError(
+                  `[React I18n] Invalid key: max 2 $ chanracters enabled '${id}'`
+                );
+              } else if (!id.startsWith('$') || !id.endsWith('$')) {
+                throw path.buildCodeFrameError(`[React I18n] Invalid key: [a-zA-Z0-9]$ '${id}'`);
+              }
+            }
+
+            // detect reused keys = not declared at moment
+
+            if (!attrs.d) {
+              throw path.buildCodeFrameError('[React I18n] Message must have a default value.');
+            }
+
+            let file = state.file.opts.filename.replace(
+              state.file.opts.root || state.file.opts.sourceRoot,
+              ''
+            ); // cut off project path
+
+            let computedKey: string = '';
+
+            try {
+              computedKey = file
+                .replace(/\..*$/, '') // remove file ext
+                .replace(/[/\\]/g, '.') // slashes -> dots
+                .concat('.' + attrs.id.value) // original ID
+                .replace(/^\.+/, '') // dots from start
+                .replace(/^src\./, '') // remove src root
+                .replace(/((^|\.)[A-Z])/g, (v: string) => v.toLowerCase()) // all words to camelcase so key.LabelName -> key.labelName
+                .split('.')
+                .filter((i: any, k: number, a: Array<any>) => i !== a[k + 1]) // remove same steps, so pages/A/A.js -> pages.A
+                .join('.');
+            } catch (e) {
+              throw path.buildCodeFrameError(
+                '[React I18n] building key failed: ' + e.message || e.code || e
+              );
+            }
+
+            // log object
+            const mapItem = {
+              minKey: count.toString(16),
+              id: attrs.id.value,
+              key: computedKey,
+              num: count,
+              d: null,
+              file
+            };
+
+            if (attrs.id.value.endsWith('$')) {
+              const props =
+                attrs.d && attrs.d.expression && attrs.d.expression.properties
+                  ? // @ts-ignore
+                    attrs.d.expression.properties
+                  : null;
+
+              if (!props || typeof props !== 'object') {
+                throw path.buildCodeFrameError(
+                  '[React I18n] Enum default have to be object / map!'
+                );
+              }
+
+              mapItem.d = props.reduce(
+                (obj: {}, it: { key: { name: string }; value: { value: any } }) => {
+                  // POTENTIAL BUG - parsing could fail because enum expects Object as default val
+                  obj[it.key.name] = it.value.value;
+                  KEYS[computedKey + '.' + it.key.name] = it.value.value;
+                  count++;
+                  return obj;
+                },
+                {}
+              );
+            } else {
+              KEYS[computedKey] = attrs.d.value;
+              mapItem.d = attrs.d.value;
+              count++;
+            }
+
+            KEYMAP[computedKey] = mapItem;
+            attrs.id.value = computedKey;
+
+            // Production build
+            if (replaceDefault && replaceDefault[computedKey]) {
+              let newDefault = replaceDefault[computedKey];
+              // Build Enum defaults
+              if (attrs.id.value.endsWith('$')) {
+                newDefault = {};
+                const keys = Object.keys(replaceDefault);
+                for (let i = 0; i <= keys.length; i++) {
+                  if (keys[i].startsWith(computedKey)) {
+                    let k = keys[i].replace(computedKey + '.', '');
+                    newDefault[k] = replaceDefault[k];
+                  }
+                }
+              }
+
+              if (!newDefault) {
+                throw path.buildCodeFrameError(
+                  `[React I18n] Missing default value to replace '${computedKey}'`
+                );
+              }
+
+              attrs.d.value = newDefault;
+            }
+            changed = true;
+          }
+        }
+      },
+
       post() {
         if (!changed) {
           return; // skip untouched files
         }
 
-        if (options.saveKeys) {
+        DEBUG_FILE && fs.writeFileSync(DEBUG_FILE, JSON.stringify(KEYMAP, null, 2));
+
+        if (DEFAULTS_FILE) {
           KEYS = Object.keys(KEYS)
             .sort()
             .reduce((map, key) => {
               map[key] = KEYS[key];
               return map;
             }, {});
-          KEYS_FILE && fs.writeFileSync(KEYS_FILE, JSON.stringify(KEYS, null, 2));
-          KEYMAP_FILE && fs.writeFileSync(KEYMAP_FILE, JSON.stringify(KEYMAP, null, 2));
+          DEFAULTS_FILE && fs.writeFileSync(DEFAULTS_FILE, JSON.stringify(KEYS, null, 2));
         }
 
         changed = false;
-      },
-
-      visitor: {
-        // @ts-ignore
-        JSXElement(path, state) {
-          if (path.node.openingElement.name.name === JSX_TAG_NAME) {
-            let attrs: any = {};
-            // @ts-ignore
-            path.node.openingElement.attributes.forEach(i => {
-              if (i.name) {
-                attrs[i.name.name] = i.value;
-              }
-            });
-
-            // @ts-ignore
-            if (typeof attrs.id.value !== 'string') {
-              throw path.buildCodeFrameError('[React I18n] Key ID must be string');
-            }
-
-            // @ts-ignore
-            const dolars = attrs.id.value.match(/\$/g) || [];
-            if (dolars.length > 1) {
-              if (dolars.length > 2) {
-                throw path.buildCodeFrameError(
-                  // @ts-ignore
-                  `[React I18n] Invalid key: max 2 $ chanracters enabled '${attrs.id.value}'`
-                );
-                // @ts-ignore
-              } else if (!attrs.id.value.startsWith('$') || !attrs.id.value.endsWith('$')) {
-                throw path.buildCodeFrameError(
-                  `[React I18n] Invalid key: $ enabled as terminal character only '${
-                    // @ts-ignore
-                    attrs.id.value
-                  }'`
-                );
-              }
-            }
-
-            // detect reused keys = not declared at moment
-            // @ts-ignore
-            if (attrs.id.value.startsWith('$')) {
-              // @ts-ignore
-              if (attrs.d) {
-                throw path.buildCodeFrameError(
-                  '[React I18n] Reused key cannot redeclare default value'
-                );
-              }
-            } else {
-              // @ts-ignore
-              if (!attrs.d) {
-                throw path.buildCodeFrameError('[React I18n] Message must have a default value.');
-              }
-
-              let file = state.file.opts.filename.replace(
-                state.file.opts.root || state.file.opts.sourceRoot,
-                ''
-              ); // cut off project path
-
-              let val = file;
-
-              try {
-                val = file
-                  .replace(/\..*$/, '') // remove file ext
-                  .replace(/[/\\]/g, '.') // slashes -> dots
-                  // @ts-ignore
-                  .concat('.' + attrs.id.value) // original ID
-                  .replace(/^\.+/, '') // dots from start
-                  .replace(/^src\./, '') // remove src root
-                  // @ts-ignore
-                  .replace(/((^|\.)[A-Z])/g, v => v.toLowerCase()) // all words to camelcase so key.LabelName -> key.labelName
-                  .split('.')
-                  // @ts-ignore
-                  .filter((i, k, a) => i !== a[k + 1]) // remove same steps, so pages/A/A.js -> pages.A
-                  .join('.');
-              } catch (e) {
-                throw path.buildCodeFrameError(
-                  '[React I18n] building key failed: ' + e.message || e.code || e
-                );
-              }
-
-              // log object
-              const mapItem = {
-                minKey: count.toString(16),
-                // @ts-ignore
-                id: attrs.id.value,
-                num: count,
-                key: val,
-                d: null,
-                file
-              };
-
-              // @ts-ignore
-              if (attrs.id.value.endsWith('$')) {
-                const props =
-                  // @ts-ignore
-                  attrs.d && attrs.d.expression && attrs.d.expression.properties
-                    ? // @ts-ignore
-                      attrs.d.expression.properties
-                    : null;
-
-                if (!props || typeof props !== 'object') {
-                  throw path.buildCodeFrameError(
-                    '[React I18n] Enum default have to be object / map!'
-                  );
-                }
-
-                // @ts-ignore
-                mapItem.d = props.reduce((obj, it) => {
-                  // POTENTIAL BUG - parsing could fail because enum expects Object as default val
-                  obj[it.key.name] = it.value.value;
-                  KEYS[val + '.' + it.key.name] = it.value.value;
-                  count++;
-                  return obj;
-                }, {});
-              } else {
-                // @ts-ignore
-                KEYS[val] = attrs.d.value;
-                // @ts-ignore
-                mapItem.d = attrs.d.value;
-                count++;
-              }
-
-              KEYMAP[val] = mapItem;
-              // @ts-ignore
-              attrs.id.value = val;
-
-              // Production build
-              if (replaceDefault && replaceDefault[val]) {
-                let newDefault = replaceDefault[val];
-                // Build Enum defaults
-                // @ts-ignore
-                if (attrs.id.value.endsWith('$')) {
-                  newDefault = {};
-                  const keys = Object.keys(replaceDefault);
-                  for (let i = 0; i <= keys.length; i++) {
-                    if (keys[i].startsWith(val)) {
-                      let k = keys[i].replace(val + '.', '');
-                      newDefault[k] = replaceDefault[k];
-                    }
-                  }
-                }
-
-                if (!newDefault) {
-                  throw path.buildCodeFrameError(
-                    `[React I18n] Missing default value to replace '${val}'`
-                  );
-                }
-                // @ts-ignore
-                attrs.d.value = newDefault;
-              }
-              changed = true;
-            }
-          }
-        }
       }
     };
   };
