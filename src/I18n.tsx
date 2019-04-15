@@ -1,13 +1,20 @@
 import * as React from 'react';
 
 import format from './_helpers/format';
-import Context, { TranslationSource } from './Context';
+import Context, { I18nContextValue, TranslationSource } from './Context';
 
-// -----------------------------------------------------------------------------
+// -------------------------------------------------------------------------------------------------
+
+export interface RenderComponentProps {
+  value: string;
+  d: any;
+}
+
+declare const RenderComponent: React.ComponentType<RenderComponentProps>;
 
 export interface I18nProps {
-  children?: (val: string, map: null | TranslationSource) => React.ReactNode;
-  component?: typeof React.Component;
+  component?: typeof RenderComponent;
+  children?: typeof RenderComponent;
   d: string | TranslationSource;
   id: string;
   v?: string;
@@ -16,21 +23,19 @@ export interface I18nProps {
 // -------------------------------------------------------------------------------------------------
 
 class I18n extends React.PureComponent<I18nProps> {
+  context: I18nContextValue;
   static contextType = Context;
-
-  // // --------------------------------------------------------------------------------------------
 
   render(): React.ReactNode {
     const { id, children, d, v, component, ...options } = this.props;
+    const Component: undefined | typeof RenderComponent = component || children;
     const more = options || {};
-    const isRenderProps = typeof children === 'function';
     const isEnum = id.endsWith('$');
 
     const { get, locale } = this.context;
 
-    const C: undefined | typeof React.Component = component;
     let initial = d;
-    let template: string = typeof initial === 'string' ? initial : '';
+    let value: string = typeof initial === 'string' ? initial : '';
 
     if (!id) {
       throw new Error(`I18n: Missing id`);
@@ -44,24 +49,17 @@ class I18n extends React.PureComponent<I18nProps> {
     if (isEnum) {
       const enumObj = this.getEnum();
       if (enumObj) {
-        template = enumObj.template;
+        value = enumObj.template;
         initial = enumObj.initial;
       }
     } else {
-      // Common
-      template = get(id) || template || '';
+      value = get(id) || value || '';
     }
 
-    let value: any = (template && format(template, locale, more)) || '';
+    value = (value && format(value, locale, more)) || '';
 
-    // Render props
-    if (isRenderProps && children) {
-      return children(value, isEnum && typeof initial === 'object' ? initial : null);
-    }
-
-    // Custom component
-    if (C) {
-      return <C {...this.props}>{value}</C>;
+    if (Component) {
+      return <Component {...this.props} value={value} d={initial} />;
     }
 
     return value;

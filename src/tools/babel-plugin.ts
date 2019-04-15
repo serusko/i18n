@@ -1,13 +1,9 @@
 const jsxPlugin = require('babel-plugin-syntax-jsx');
 const fs = require('fs');
 
-// debug database
 let KEYMAP = {};
-// simple output
 let KEYS = {};
-// existing unique keys
 let count = 0;
-// key changed = update output
 let changed = false;
 
 // -------------------------------------------------------------------------------------------------
