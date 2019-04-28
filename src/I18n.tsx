@@ -1,110 +1,63 @@
-import * as React from 'react';
+/**
+ * @class I18n
+ */
 
-import format from './_helpers/format';
-import Context, { I18nContextValue, TranslationSource } from './Context';
+import * as React from "react";
 
-// -------------------------------------------------------------------------------------------------
+import Context from "./Context";
+import format from "./_helpers/format";
 
 export interface RenderComponentProps {
+  children: string;
   value: string;
-  d: any;
+  d: string;
 }
 
 declare const RenderComponent: React.ComponentType<RenderComponentProps>;
 
 export interface I18nProps {
-  component?: typeof RenderComponent;
+  render?: (value: string, d: string) => JSX.Element;
+  component?: string | typeof RenderComponent;
   children?: typeof RenderComponent;
-  d: string | TranslationSource;
   id: string;
-  v?: string;
+  d: string;
 }
 
-// -------------------------------------------------------------------------------------------------
-
-class I18n extends React.PureComponent<I18nProps> {
-  context: I18nContextValue;
+export default class I18n extends React.Component<I18nProps> {
   static contextType = Context;
 
-  render(): React.ReactNode {
-    const { id, children, d, v, component, ...options } = this.props;
-    const Component: undefined | typeof RenderComponent = component || children;
-    const more = options || {};
-    const isEnum = id.endsWith('$');
+  render() {
+    const { id, children, d, component, ...options } = this.props;
+    const Component: undefined | string | typeof RenderComponent =
+      component || children;
 
     const { get, locale } = this.context;
-
-    let initial = d;
-    let value: string = typeof initial === 'string' ? initial : '';
 
     if (!id) {
       throw new Error(`I18n: Missing id`);
     }
 
-    if (!initial) {
+    if (!d) {
       throw new Error(`I18n: Missing default for key "${id}"`);
     }
 
-    // Enum
-    if (isEnum) {
-      const enumObj = this.getEnum();
-      if (enumObj) {
-        value = enumObj.template;
-        initial = enumObj.initial;
-      }
-    } else {
-      value = get(id) || value || '';
-    }
+    let value: string = typeof d === "string" ? d : "";
 
-    value = (value && format(value, locale, more)) || '';
+    value = get(id) || value || "";
+
+    value = (value && format(value, locale, { locale, ...options })) || "";
 
     if (Component) {
-      return <Component {...this.props} value={value} d={initial} />;
+      return typeof component === "string" ? (
+        // @ts-ignore
+        <Component>{value}</Component>
+      ) : (
+        <Component {...this.props} value={value} d={d}>
+          {value}
+        </Component>
+      );
     }
 
     return value;
   }
-
-  // // --------------------------------------------------------------------------------------------
-
-  getEnum = (): null | { template: string; initial: TranslationSource } => {
-    let { id, d, v } = this.props;
-
-    if (!this.props.id.startsWith('$') && typeof d !== 'object') {
-      throw new Error(`I18n: Missing default for Enum key "${id}"`);
-    }
-
-    const children = this.props.children;
-
-    if (typeof children !== 'function' && (typeof v === 'undefined' || v === null || v === '')) {
-      throw new Error(`I18n: Missing value for Enum key "${id}"`);
-    }
-
-    const initial: null | TranslationSource =
-      this.context.match(id) || (typeof d === 'object' ? d : null) || null;
-
-    if (initial && v !== null && typeof v !== 'undefined' && initial[v]) {
-      return {
-        template: initial[v],
-        initial
-      };
-    }
-    return null;
-  };
-
-  // // --------------------------------------------------------------------------------------------
-
-  componentDidMount(): void {
-    const register = this.context.registerKey;
-    register && register(this.props.id, this.props.d);
-  }
-
-  // // --------------------------------------------------------------------------------------------
-
-  componentWillUnmount(): void {
-    const unregister = this.context.unregisterKey;
-    unregister && unregister(this.props.id);
-  }
 }
-
-export default I18n;

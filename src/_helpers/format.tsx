@@ -1,8 +1,12 @@
-import MessageFormat from 'intl-messageformat';
+import MessageFormat from "intl-messageformat";
 
 // -------------------------------------------------------------------------------------------------
 
-export default function format(template: string, locale: string, props: Object): string {
+export default function format(
+  template: string,
+  locale: string,
+  props: Object
+): string {
   try {
     let msg = new MessageFormat(template, locale);
     return msg.format(props);

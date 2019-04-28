@@ -1,19 +1,20 @@
 // @flow
 
-import * as React from 'react';
+import * as React from "react";
 
-import Context from './Context';
-import { I18nContextValue } from './Context';
-import { SourceResponseType } from './tools/sourceFactory';
+import Context from "./Context";
+import { I18nContextValue } from "./Context";
+import { SourceResponseType } from "./tools/sourceFactory";
 
 // -------------------------------------------------------------------------------------------------
 
-export type ProviderProps = {
-  source: (locale: string) => Promise<SourceResponseType>;
+export interface ProviderProps {
+  resolver: (locale: string) => Promise<SourceResponseType>;
+  setLocale?: (locale: string) => void;
   watchRegister?: ({}) => void;
   children: React.ReactNode;
-  locale?: string;
-};
+  defaultLocale?: string;
+}
 
 interface KeyRegister {
   [key: string]: string;
@@ -21,7 +22,10 @@ interface KeyRegister {
 
 // -------------------------------------------------------------------------------------------------
 
-export default class Provider extends React.PureComponent<ProviderProps, I18nContextValue> {
+export default class Provider extends React.PureComponent<
+  ProviderProps,
+  I18nContextValue
+> {
   register: KeyRegister = {};
   mounted: boolean = false;
 
@@ -29,28 +33,16 @@ export default class Provider extends React.PureComponent<ProviderProps, I18nCon
 
   constructor(props: ProviderProps) {
     super(props);
-    const isProd = process.env.NODE_ENV === 'production';
+
     this.state = {
-      unregisterKey: isProd ? null : this.unregisterKey.bind(this),
-      registerKey: isProd ? null : this.registerKey.bind(this),
-      locale: props.locale || 'en',
-      match: () => ({}),
-      get: () => ''
+      locale: props.defaultLocale || "en",
+      setLocale: props.setLocale || this.setLocale,
+      get: () => ""
     };
   }
 
-  // // --------------------------------------------------------------------------------------------
-
-  registerKey = (key: string, def: any): void => {
-    this.register[key] = def;
-    this.props.watchRegister && this.props.watchRegister({ ...this.register });
-  };
-
-  // // --------------------------------------------------------------------------------------------
-
-  unregisterKey = (key: string): void => {
-    delete this.register[key];
-    this.props.watchRegister && this.props.watchRegister({ ...this.register });
+  setLocale = (locale: string) => {
+    this.mounted && this.setState({ locale });
   };
 
   // // --------------------------------------------------------------------------------------------
@@ -69,22 +61,25 @@ export default class Provider extends React.PureComponent<ProviderProps, I18nCon
   // // --------------------------------------------------------------------------------------------
 
   componentDidUpdate(): void {
-    if (this.props.locale && this.props.locale !== this.state.locale) {
-      this.loadSource(this.props.locale);
+    if (
+      this.props.defaultLocale &&
+      this.props.defaultLocale !== this.state.locale
+    ) {
+      this.loadSource(this.props.defaultLocale);
     }
   }
 
   // // --------------------------------------------------------------------------------------------
 
   loadSource = (locale: string): void => {
-    this.props.source &&
+    this.props.resolver &&
       this.props
-        .source(locale)
-        .then(({ get, match }) => {
-          this.mounted && this.setState({ locale, get, match });
+        .resolver(locale)
+        .then(({ get }) => {
+          this.mounted && this.setState({ locale, get });
         })
         .catch(e => {
-          console.error(new Error('I18n: Error loading locale source'));
+          console.error(new Error("I18n: Error loading locale source"));
           console.error(e);
         });
   };
@@ -92,6 +87,10 @@ export default class Provider extends React.PureComponent<ProviderProps, I18nCon
   // // --------------------------------------------------------------------------------------------
 
   render(): React.ReactNode {
-    return <Context.Provider value={this.state}>{this.props.children}</Context.Provider>;
+    return (
+      <Context.Provider value={this.state}>
+        {this.props.children}
+      </Context.Provider>
+    );
   }
 }
