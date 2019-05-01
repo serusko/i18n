@@ -1,8 +1,11 @@
 # @serus/i18n
 
-> 
+> Internationalization helper
 
-[![NPM](https://img.shields.io/npm/v/@serus/i18n.svg)](https://www.npmjs.com/package/@serus/i18n) [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
+![](https://img.shields.io/npm/v/@serus/i18n.svg?style=flat)
+[![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
+[![Build Status](https://travis-ci.com/serusko/i18n.svg?branch=master)](https://travis-ci.com/serus22/i18n)
+![](https://img.shields.io/npm/dt/@serus/i18n.svg?style=flat)
 
 ## Install
 
@@ -13,19 +16,17 @@ npm install --save @serus/i18n
 ## Usage
 
 ```tsx
-import * as React from 'react'
+import * as React from 'react';
 
-import MyComponent from '@serus/i18n'
+import MyComponent from '@serus/i18n';
 
 class Example extends React.Component {
-  render () {
-    return (
-      <MyComponent />
-    )
+  render() {
+    return <MyComponent />;
   }
 }
 ```
 
 ## License
 
-MIT © [serus22](https://github.com/serus22)
+MIT © [serusko](https://github.com/serusko)
