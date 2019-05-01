@@ -1,32 +1,30 @@
 // @flow
 
-import * as React from "react";
+import * as React from 'react';
 
-import Context from "./Context";
-import { I18nContextValue } from "./Context";
-import { SourceResponseType } from "./tools/sourceFactory";
+import { EnumValueType } from './I18En';
+import Context, { I18nContextValueType, MessageOptionsType } from './Context';
 
 // -------------------------------------------------------------------------------------------------
 
+export interface SourceResponseType {
+  get: (id: string, defaultMessage: string, options: MessageOptionsType) => null | string;
+  getEnum: (
+    id: string,
+    defaultMessage: EnumValueType,
+    options: MessageOptionsType
+  ) => null | EnumValueType;
+}
+
 export interface ProviderProps {
   resolver: (locale: string) => Promise<SourceResponseType>;
-  setLocale?: (locale: string) => void;
-  watchRegister?: ({}) => void;
   children: React.ReactNode;
   defaultLocale?: string;
 }
 
-interface KeyRegister {
-  [key: string]: string;
-}
-
 // -------------------------------------------------------------------------------------------------
 
-export default class Provider extends React.PureComponent<
-  ProviderProps,
-  I18nContextValue
-> {
-  register: KeyRegister = {};
+export default class Provider extends React.PureComponent<ProviderProps, I18nContextValueType> {
   mounted: boolean = false;
 
   // // --------------------------------------------------------------------------------------------
@@ -35,14 +33,26 @@ export default class Provider extends React.PureComponent<
     super(props);
 
     this.state = {
-      locale: props.defaultLocale || "en",
-      setLocale: props.setLocale || this.setLocale,
-      get: () => ""
+      locale: props.defaultLocale || 'en',
+      setLocale: this.setLocale,
+      getEnum: (_, d) => d,
+      get: (_, d) => d
     };
   }
 
+  // // --------------------------------------------------------------------------------------------
+
+  render(): JSX.Element {
+    const { children } = this.props;
+    return <Context.Provider value={this.state}>{children}</Context.Provider>;
+  }
+
+  // // --------------------------------------------------------------------------------------------
+
   setLocale = (locale: string) => {
-    this.mounted && this.setState({ locale });
+    if (this.mounted && this.state.locale !== locale) {
+      this.loadSource(locale);
+    }
   };
 
   // // --------------------------------------------------------------------------------------------
@@ -60,37 +70,16 @@ export default class Provider extends React.PureComponent<
 
   // // --------------------------------------------------------------------------------------------
 
-  componentDidUpdate(): void {
-    if (
-      this.props.defaultLocale &&
-      this.props.defaultLocale !== this.state.locale
-    ) {
-      this.loadSource(this.props.defaultLocale);
-    }
-  }
-
-  // // --------------------------------------------------------------------------------------------
-
   loadSource = (locale: string): void => {
     this.props.resolver &&
       this.props
         .resolver(locale)
-        .then(({ get }) => {
-          this.mounted && this.setState({ locale, get });
+        .then(({ get, getEnum }) => {
+          this.mounted && this.setState({ locale, get, getEnum });
         })
         .catch(e => {
-          console.error(new Error("I18n: Error loading locale source"));
+          console.error(new Error('I18n: Error loading locale source'));
           console.error(e);
         });
   };
-
-  // // --------------------------------------------------------------------------------------------
-
-  render(): React.ReactNode {
-    return (
-      <Context.Provider value={this.state}>
-        {this.props.children}
-      </Context.Provider>
-    );
-  }
 }

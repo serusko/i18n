@@ -21,13 +21,10 @@
     "predeploy": "cd example && yarn install && yarn run build",
     "deploy": "gh-pages -d example/build"
   },
-  "dependencies": {
-    "intl-messageformat": "^2.2.0"
-  },
+  "dependencies": {},
   "peerDependencies": {
-    "prop-types": "^15.5.4",
-    "react": "^15.0.0 || ^16.0.0",
-    "react-dom": "^15.0.0 || ^16.0.0"
+    "react": "^16.8.0",
+    "react-dom": "^16.8.0"
   },
   "devDependencies": {
     "@svgr/rollup": "^2.4.1",
@@ -53,5 +50,13 @@
   },
   "files": [
     "dist"
+  ],
+  "bugs": {
+    "url": "https://github.com/serus22/i18n/issues"
+  },
+  "homepage": "https://github.com/serus22/i18n#readme",
+  "keywords": [
+    "i18n",
+    "intl"
   ]
 }

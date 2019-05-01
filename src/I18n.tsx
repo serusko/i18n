@@ -2,18 +2,21 @@
  * @class I18n
  */
 
-import * as React from "react";
+import * as React from 'react';
+// @ts-ignore
+import formatMessage from 'format-message';
 
-import Context from "./Context";
-import format from "./_helpers/format";
+import Context from './Context';
 
-export interface RenderComponentProps {
+export interface I18nRenderComponentProps {
+  setLocale: (locale: string) => void;
   children: string;
+  locale: string;
   value: string;
   d: string;
 }
 
-declare const RenderComponent: React.ComponentType<RenderComponentProps>;
+declare const RenderComponent: React.ComponentType<I18nRenderComponentProps>;
 
 export interface I18nProps {
   render?: (value: string, d: string) => JSX.Element;
@@ -23,15 +26,14 @@ export interface I18nProps {
   d: string;
 }
 
-export default class I18n extends React.Component<I18nProps> {
+export default class I18n extends React.PureComponent<I18nProps> {
   static contextType = Context;
 
-  render() {
-    const { id, children, d, component, ...options } = this.props;
-    const Component: undefined | string | typeof RenderComponent =
-      component || children;
+  render(): JSX.Element {
+    const { id, children, d, component, ...rest } = this.props;
+    const Component: undefined | string | typeof RenderComponent = component || children;
 
-    const { get, locale } = this.context;
+    const { get, locale, setLocale } = this.context;
 
     if (!id) {
       throw new Error(`I18n: Missing id`);
@@ -41,23 +43,19 @@ export default class I18n extends React.Component<I18nProps> {
       throw new Error(`I18n: Missing default for key "${id}"`);
     }
 
-    let value: string = typeof d === "string" ? d : "";
-
-    value = get(id) || value || "";
-
-    value = (value && format(value, locale, { locale, ...options })) || "";
+    const value = get(id, d, rest);
 
     if (Component) {
-      return typeof component === "string" ? (
+      return typeof component === 'string' ? (
         // @ts-ignore
         <Component>{value}</Component>
       ) : (
-        <Component {...this.props} value={value} d={d}>
+        <Component {...rest} value={value} d={d} locale={locale} setLocale={setLocale}>
           {value}
         </Component>
       );
     }
 
-    return value;
+    return <>{value}</>;
   }
 }
