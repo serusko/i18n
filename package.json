@@ -1,7 +1,7 @@
 {
   "name": "@serus/i18n",
   "version": "0.2.0",
-  "description": "",
+  "description": "Internationalization helper",
   "author": "serus22",
   "license": "MIT",
   "repository": "serus22/@serus/i18n",
