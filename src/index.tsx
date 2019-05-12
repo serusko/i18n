@@ -7,3 +7,5 @@ export { default as Provider } from './Provider';
 export { SourceResponseType } from './Provider';
 export { I18nRenderComponentProps } from './I18n';
 export { I18EnRenderComponentProps } from './I18En';
+
+export { default as i18nBabelPlugin } from './tools/babel-plugin';

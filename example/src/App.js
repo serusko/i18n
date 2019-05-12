@@ -50,7 +50,7 @@ export default function App() {
             id="usage6"
           />
         </p>
-        <I18En d={{ en: 'English', sk: 'Slovak', cy: 'Welsh' }} component={Select} id="locale" />{' '}
+        <I18En d={{ en: 'English', sk: 'Slovak', cy: 'Welsh' }} component={Select} id="locale" />
       </div>
     </Provider>
   );

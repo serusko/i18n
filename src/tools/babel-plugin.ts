@@ -5,32 +5,24 @@ let KEYMAP = {};
 let KEYS = {};
 let count = 0;
 let changed = false;
+let replaceDefault: null | string | {} = null;
 
 // -------------------------------------------------------------------------------------------------
 
-/**
- * options: {
- *   defaultMessages: string | { [string]: string } // json file or map
- *   outputFile: string
- *   debugFile: string
- *   tagName: string
- * }
- */
-
 export interface BabelPluginOptions {
-  defaultMessages: null | string | {};
-  outputFile: null | string;
-  debugFile: null | string;
-  saveKeys: null | Boolean;
-  tagName: null | string;
+  defaultMessages?: string | {}; // replace defaults
+  outputFile?: string;
+  debugFile?: string;
+  saveKeys?: boolean;
+  minify?: boolean;
 }
 
 const defaultOptions: BabelPluginOptions = {
-  defaultMessages: null,
-  outputFile: null,
+  defaultMessages: undefined,
+  outputFile: undefined,
+  debugFile: undefined,
   saveKeys: false,
-  debugFile: null,
-  tagName: null
+  minify: false
 };
 
 interface TagAttribute {
@@ -40,17 +32,9 @@ interface TagAttribute {
   value: any;
 }
 
+// -------------------------------------------------------------------------------------------------
+
 export default function I18nBabelPlugin(options: BabelPluginOptions = defaultOptions) {
-  // debug output file
-  const DEBUG_FILE = options.debugFile;
-  // active keys map
-  const DEFAULTS_FILE = options.outputFile;
-  // tag name
-  const JSX_TAG_NAME = options.tagName || 'I18n';
-
-  // source map for building pre-translated app
-  let replaceDefault: null | string | {} = null;
-
   if (options.defaultMessages) {
     if (typeof options.defaultMessages === 'string') {
       try {
@@ -65,156 +49,164 @@ export default function I18nBabelPlugin(options: BabelPluginOptions = defaultOpt
     }
   }
 
+  const config = {
+    // debug output file
+    DEBUG_FILE: options.debugFile,
+    // active keys map
+    EXPORT_FILE: options.outputFile,
+    // use minified keys
+    MINIFY_KEYS: options.minify
+  };
+
   // // --------------------------------------------------------------------------------------------
 
   return function() {
     return {
       inherits: jsxPlugin,
+
+      // // // -------------------------------------------------------------------------------------
+
       visitor: {
         JSXElement(path: any, state: any) {
           const tagName = path.node.openingElement.name.name;
 
-          if (tagName === JSX_TAG_NAME) {
-            let attrs: any = {};
-            path.node.openingElement.attributes.forEach((i: TagAttribute) => {
-              if (i.name) {
-                attrs[i.name.name] = i.value;
-              }
-            });
-
-            const id = attrs.id && attrs.id.value;
-
-            if (typeof id !== 'string') {
-              throw path.buildCodeFrameError('[React I18n] Key ID must be string');
-            }
-
-            const dolars = id.match(/\$/g) || [];
-            if (dolars.length > 1) {
-              if (dolars.length > 2) {
-                throw path.buildCodeFrameError(
-                  `[React I18n] Invalid key: max 2 $ chanracters enabled '${id}'`
-                );
-              } else if (!id.startsWith('$') || !id.endsWith('$')) {
-                throw path.buildCodeFrameError(`[React I18n] Invalid key: [a-zA-Z0-9]$ '${id}'`);
-              }
-            }
-
-            if (!attrs.d) {
-              throw path.buildCodeFrameError('[React I18n] Message must have a default value.');
-            }
-
-            let file = state.file.opts.filename.replace(
-              state.file.opts.root || state.file.opts.sourceRoot,
-              ''
-            ); // cut off project path
-
-            let computedKey: string = '';
-
-            try {
-              computedKey = file
-                .replace(/\..*$/, '') // remove file ext
-                .replace(/[/\\]/g, '.') // slashes -> dots
-                .concat('.' + attrs.id.value) // original ID
-                .replace(/^\.+/, '') // dots from start
-                .replace(/^src\./, '') // remove src root
-                .replace(/((^|\.)[A-Z])/g, (v: string) => v.toLowerCase()) // all words to camelcase so key.LabelName -> key.labelName
-                .split('.')
-                .filter((i: any, k: number, a: Array<any>) => i !== a[k + 1]) // remove same steps, so pages/A/A.js -> pages.A
-                .join('.');
-            } catch (e) {
-              throw path.buildCodeFrameError(
-                '[React I18n] building key failed: ' + e.message || e.code || e
-              );
-            }
-
-            // log object
-            const mapItem = {
-              minKey: count.toString(16),
-              id: attrs.id.value,
-              key: computedKey,
-              num: count,
-              d: null,
-              file
-            };
-
-            if (attrs.id.value.endsWith('$')) {
-              const props =
-                attrs.d && attrs.d.expression && attrs.d.expression.properties
-                  ? attrs.d.expression.properties
-                  : null;
-
-              if (!props || typeof props !== 'object') {
-                throw path.buildCodeFrameError(
-                  '[React I18n] Enum default have to be object / map!'
-                );
-              }
-
-              mapItem.d = props.reduce(
-                (obj: {}, it: { key: { name: string }; value: { value: any } }) => {
-                  // POTENTIAL BUG - parsing could fail because enum expects Object as default val
-                  obj[it.key.name] = it.value.value;
-                  KEYS[computedKey + '.' + it.key.name] = it.value.value;
-                  count++;
-                  return obj;
-                },
-                {}
-              );
-            } else {
-              KEYS[computedKey] = attrs.d.value;
-              mapItem.d = attrs.d.value;
-              count++;
-            }
-
-            KEYMAP[computedKey] = mapItem;
-            attrs.id.value = computedKey;
-
-            // Production build
-            if (replaceDefault && replaceDefault[computedKey]) {
-              let newDefault = replaceDefault[computedKey];
-              // Build Enum defaults
-              if (attrs.id.value.endsWith('$')) {
-                newDefault = {};
-                const keys = Object.keys(replaceDefault);
-                for (let i = 0; i <= keys.length; i++) {
-                  if (keys[i].startsWith(computedKey)) {
-                    let k = keys[i].replace(computedKey + '.', '');
-                    newDefault[k] = replaceDefault[k];
-                  }
-                }
-              }
-
-              if (!newDefault) {
-                throw path.buildCodeFrameError(
-                  `[React I18n] Missing default value to replace '${computedKey}'`
-                );
-              }
-
-              attrs.d.value = newDefault;
-            }
-            changed = true;
+          if (tagName === 'I18n' || tagName === 'I18En') {
+            processI18nTag(path, state, config);
           }
         }
       },
+
+      // // // -------------------------------------------------------------------------------------
 
       post() {
         if (!changed) {
           return; // skip untouched files
         }
 
-        DEBUG_FILE && fs.writeFileSync(DEBUG_FILE, JSON.stringify(KEYMAP, null, 2));
+        config.DEBUG_FILE && fs.writeFileSync(config.DEBUG_FILE, JSON.stringify(KEYMAP, null, 2));
 
-        if (DEFAULTS_FILE) {
+        if (config.EXPORT_FILE) {
           KEYS = Object.keys(KEYS)
             .sort()
             .reduce((map, key) => {
               map[key] = KEYS[key];
               return map;
             }, {});
-          DEFAULTS_FILE && fs.writeFileSync(DEFAULTS_FILE, JSON.stringify(KEYS, null, 2));
+          config.EXPORT_FILE && fs.writeFileSync(config.EXPORT_FILE, JSON.stringify(KEYS, null, 2));
         }
 
         changed = false;
       }
     };
   };
+}
+
+// -------------------------------------------------------------------------------------------------
+
+function processI18nTag(path: any, state: any, config: any) {
+  const tagName = path.node.openingElement.name.name;
+  const isEnum = tagName === 'I18En';
+  const attrs: any = {};
+
+  // read attributes
+  path.node.openingElement.attributes.forEach((i: TagAttribute) => {
+    if (i.name) {
+      attrs[i.name.name] = i.value;
+    }
+  });
+
+  const id = attrs.id.value;
+
+  if (typeof id !== 'string') {
+    throw path.buildCodeFrameError('[React I18n] key id is required');
+  }
+
+  // get default id suffix
+  let currentKey: string = '';
+  let filePath: string = '';
+
+  try {
+    filePath = state.file.opts.filename.replace(
+      state.file.opts.root || state.file.opts.sourceRoot, // babel version
+      ''
+    );
+    currentKey = createKey(filePath, id);
+  } catch (e) {
+    throw path.buildCodeFrameError('[React I18n] building key failed: ' + e.message || e.code || e);
+  }
+
+  // if (KEYS.hasOwnProperty(currentKey)) {
+  //   throw path.buildCodeFrameError(
+  //     `[React I18n] Key: "${currentKey}" is already declared`
+  //   );
+  // }
+
+  if (!attrs.d) {
+    throw path.buildCodeFrameError('[React I18n] Message must have a default value.');
+  }
+
+  // log object
+  const mapItem = {
+    file: filePath,
+    id,
+    key: currentKey,
+    minKey: count.toString(16),
+    num: count,
+    d: null
+  };
+
+  // enum has to have default object literal
+  if (isEnum) {
+    const enumMap =
+      attrs.d && attrs.d.expression && attrs.d.expression.properties
+        ? attrs.d.expression.properties
+        : null;
+
+    mapItem.d = enumMap.reduce(
+      (obj: {}, it: { key: { name: string }; value: { value: any } }) => ({
+        obj,
+        [it.key.name]: it.value.value
+      }),
+      {}
+    );
+  } else {
+    mapItem.d = attrs.d.value;
+  }
+
+  // save current key
+  KEYS[currentKey] = attrs.d.value;
+
+  // save debug output
+  KEYMAP[currentKey] = mapItem;
+
+  // replace id
+  attrs.id.value = '' + (config.MINIFY_KEYS ? mapItem.minKey : currentKey);
+
+  // inc number of keys
+  count++;
+
+  // Production build
+  if (replaceDefault) {
+    let newDefault = undefined;
+    if (replaceDefault[currentKey]) {
+      newDefault = replaceDefault[currentKey];
+    }
+    attrs.d.value = newDefault;
+  }
+  changed = true;
+}
+
+// -------------------------------------------------------------------------------------------------
+
+function createKey(filePath: string, id: string) {
+  return filePath
+    .replace(/\..*$/, '') // remove file ext
+    .replace(/[/\\]/g, '.') // slashes -> dots
+    .concat('.' + id) // original ID
+    .replace(/^\.+/, '') // dots from start
+    .replace(/^src\./, '') // remove src root -- TODO: root folder
+    .replace(/((^|\.)[A-Z])/g, (v: string) => v.toLowerCase()) // all words to camelcase so key.LabelName -> key.labelName
+    .split('.')
+    .filter((i: any, k: number, a: Array<any>) => i !== a[k + 1]) // remove same steps, so pages/A/A.js -> pages.A
+    .join('.');
 }

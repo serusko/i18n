@@ -8,23 +8,27 @@ import formatMessage from 'format-message';
 
 import Context from './Context';
 
+// -------------------------------------------------------------------------------------------------
+
 export interface I18nRenderComponentProps {
   setLocale: (locale: string) => void;
+  defaultMessage: string;
   children: string;
   locale: string;
   value: string;
-  d: string;
 }
-
-declare const RenderComponent: React.ComponentType<I18nRenderComponentProps>;
 
 export interface I18nProps {
   render?: (value: string, d: string) => JSX.Element;
   component?: string | typeof RenderComponent;
   children?: typeof RenderComponent;
   id: string;
-  d: string;
+  d: string; // default message
 }
+
+declare const RenderComponent: React.ComponentType<I18nRenderComponentProps>;
+
+// -------------------------------------------------------------------------------------------------
 
 export default class I18n extends React.PureComponent<I18nProps> {
   static contextType = Context;
@@ -50,12 +54,12 @@ export default class I18n extends React.PureComponent<I18nProps> {
         // @ts-ignore
         <Component>{value}</Component>
       ) : (
-        <Component {...rest} value={value} d={d} locale={locale} setLocale={setLocale}>
+        <Component {...rest} value={value} defaultMessage={d} locale={locale} setLocale={setLocale}>
           {value}
         </Component>
       );
     }
 
-    return <>{value}</>;
+    return value;
   }
 }

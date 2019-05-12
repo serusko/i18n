@@ -22,6 +22,7 @@ declare const RenderComponent: React.ComponentType<I18EnRenderComponentProps>;
 
 export interface I18EnProps {
   render?: (props: I18EnRenderComponentProps) => JSX.Element;
+  children?: (props: I18EnRenderComponentProps) => JSX.Element;
   component?: string | typeof RenderComponent;
   v: number | string;
   d: EnumValueType;
@@ -34,13 +35,15 @@ export default class I18En extends React.PureComponent<I18EnProps> {
   static contextType = Context;
 
   render() {
-    const { id, d, v, component, ...rest } = this.props;
+    const { id, d, v, component, render, children, ...rest } = this.props;
 
     if (!id) {
       throw new Error(`I18n: Missing id for message: "${d}"`);
     }
 
     const Component: undefined | string | typeof RenderComponent = component;
+    const fn: undefined | ((props: I18EnRenderComponentProps) => JSX.Element) =
+      render || children || undefined;
 
     if (typeof v !== 'undefined' && typeof v === 'number' && typeof v !== 'string') {
       throw new Error(`I18n: Invalid enum value for key "${id}"`);
@@ -59,12 +62,16 @@ export default class I18En extends React.PureComponent<I18EnProps> {
     if (Component) {
       return typeof Component === 'string' ? (
         // @ts-ignore
-        <Component>{value}</Component>
+        <Component>{value || d}</Component>
       ) : (
         <Component {...rest} setLocale={setLocale} locale={locale} value={value} v={v} map={map}>
           {value}
         </Component>
       );
+    }
+
+    if (typeof fn === 'function') {
+      return fn({ ...rest, map, locale, value, v, setLocale });
     }
 
     return <>{value}</>;
