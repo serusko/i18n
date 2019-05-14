@@ -1,6 +1,6 @@
 {
   "name": "@serus/i18n",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "description": "Internationalization helper",
   "author": "serus22",
   "license": "MIT",
@@ -63,5 +63,8 @@
   "keywords": [
     "i18n",
     "intl"
-  ]
+  ],
+  "bin": {
+    "@serus/i18n": "./bin/process.js"
+  }
 }
