@@ -1,6 +1,6 @@
 {
   "name": "@serus/i18n",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "description": "Internationalization helper",
   "author": "serus22",
   "license": "MIT",
@@ -50,7 +50,8 @@
     "typescript": "^2.8.3"
   },
   "files": [
-    "dist"
+    "dist",
+    "bin"
   ],
   "publishConfig": {
     "access": "public"
@@ -62,8 +63,5 @@
   "keywords": [
     "i18n",
     "intl"
-  ],
-  "bin": {
-    "@serus/i18n": "bin/process.js"
-  }
+  ]
 }
