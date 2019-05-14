@@ -64,6 +64,6 @@
     "intl"
   ],
   "bin": {
-    "@serus/i18n": "process.js"
+    "@serus/i18n": "./process.js"
   }
 }
