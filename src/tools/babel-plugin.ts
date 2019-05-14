@@ -135,12 +135,6 @@ function processI18nTag(path: any, state: any, config: any) {
     throw path.buildCodeFrameError('[React I18n] building key failed: ' + e.message || e.code || e);
   }
 
-  // if (KEYS.hasOwnProperty(currentKey)) {
-  //   throw path.buildCodeFrameError(
-  //     `[React I18n] Key: "${currentKey}" is already declared`
-  //   );
-  // }
-
   if (!attrs.d) {
     throw path.buildCodeFrameError('[React I18n] Message must have a default value.');
   }
