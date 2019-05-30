@@ -21,9 +21,10 @@ const match = (source: TranslationSource, locale: string, debug?: boolean) => (
 ): null | TranslationSource => {
   let keys = {};
   let i = 0;
+
   Object.keys(source).forEach(key => {
     if (key.startsWith(search)) {
-      keys[key] = source[key];
+      keys[key.substr(search.length + 1)] = source[key];
       i++;
     }
   });

@@ -80,10 +80,13 @@ class I18n extends React.PureComponent<I18nProps> {
       throw new Error(`I18n: Missing value for Enum key "${id}"`);
     }
 
-    const initial: null | TranslationSource =
-      this.context.match(id) || (typeof d === 'object' ? d : null) || null;
+    const found = this.context.match(id) || {};
+    const initial: TranslationSource = {
+      ...(d !== null && typeof d === 'object' ? d : {}),
+      ...found
+    };
 
-    if (initial && v !== null && typeof v !== 'undefined' && initial[v]) {
+    if (v !== null && typeof v !== 'undefined') {
       return {
         template: initial[v],
         initial
